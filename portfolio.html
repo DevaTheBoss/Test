@@ -1,0 +1,740 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deva Kanaga Vimalathithan R - Portfolio</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;700&family=Caveat:wght@400;700&family=Orbitron:wght@400;700&family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        body {
+            background: #0a0a0a;
+            color: #00B7EB;
+            line-height: 1.6;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        #background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        header {
+            padding: 2rem 0;
+            text-align: center;
+            box-shadow: 0 0 60px #00B7EB;
+            border: 4px solid transparent;
+            border-image: linear-gradient(45deg, #00B7EB, #FF00FF, #39FF14) 1;
+            animation: borderGlow 3s ease infinite;
+        }
+
+        @keyframes borderGlow {
+            0% { border-image: linear-gradient(45deg, #00B7EB, #FF00FF, #39FF14) 1; }
+            50% { border-image: linear-gradient(45deg, #39FF14, #00B7EB, #FF00FF) 1; }
+            100% { border-image: linear-gradient(45deg, #00B7EB, #FF00FF, #39FF14) 1; }
+        }
+
+        header .header-text {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        header h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.8rem;
+            text-transform: uppercase;
+            margin: 0 0 0.5rem 0;
+            transition: text-shadow 0.3s ease;
+        }
+
+        header p {
+            font-size: 1.3rem;
+            margin: 0;
+            transition: text-shadow 0.3s ease;
+        }
+
+        header .header-text:hover h1,
+        header .header-text:hover p {
+            text-shadow: 0 0 20px #00B7EB, 0 0 30px #FFFFFF, 0 0 40px #00B7EB;
+        }
+
+        nav {
+            padding: 1rem 0;
+            backdrop-filter: blur(10px);
+            animation: slideIn 0.8s ease-out;
+        }
+
+        nav ul {
+            display: flex;
+            justify-content: center;
+            list-style: none;
+        }
+
+        nav ul li {
+            margin: 0 1.8rem;
+        }
+
+        nav ul li a {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            transition: text-shadow 0.3s ease;
+            text-decoration: none;
+            color: #00B7EB;
+        }
+
+        nav ul li a:hover {
+            text-shadow: 0 0 20px #FFFFFF, 0 0 30px #FFD700, 0 0 40px #00B7EB;
+        }
+
+        nav ul li a:active,
+        nav ul li a:focus {
+            color: #00B7EB;
+            text-shadow: none;
+            outline: none;
+        }
+
+        section {
+            padding: 3rem 0;
+        }
+
+        h2 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.2rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            transition: text-shadow 0.3s ease;
+        }
+
+        h2:hover {
+            text-shadow: 0 0 20px #FFFFFF, 0 0 30px #FFD700, 0 0 40px #00B7EB;
+        }
+
+        .card {
+            padding: 1.5rem;
+            border-radius: 15px;
+            margin: 1.5rem 0;
+            transition: box-shadow 0.4s ease, transform 0.4s ease, border-color 0.5s linear;
+            border: 2px solid #00B7EB;
+            box-shadow: 0 0 25px rgba(0, 183, 235, 0.5);
+            transform: translateY(20px);
+            opacity: 0;
+            position: relative;
+        }
+
+        .card.visible {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .card:hover {
+            transform: translateY(-15px) scale(1.05);
+            box-shadow: 0 0 50px #FFFFFF, 0 0 30px #00B7EB;
+            border-color: #FFFFFF;
+            animation: neonOutline 1.5s infinite;
+        }
+
+        @keyframes neonOutline {
+            0% { border-color: #FFFFFF; }
+            50% { border-color: #BF00FF; }
+            100% { border-color: #FFFFFF; }
+        }
+
+        .card.about-card { animation: flipInX 0.8s ease-out forwards; }
+        .card.skills-card { animation: rotateInY 0.8s ease-out forwards; }
+        .card.tools-card { animation: scaleUp 0.8s ease-out forwards; }
+        .card.experience-card { animation: slideInRight 0.8s ease-out forwards; }
+        .card.education-card { animation: slideInLeft 0.8s ease-out forwards; }
+        .card.certification-card { animation: bounceUp 0.8s ease-out forwards; }
+        .card.contact-card { animation: zoomIn 0.8s ease-out forwards; }
+
+        @keyframes flipInX {
+            from { transform: perspective(600px) rotateX(90deg); opacity: 0; }
+            to { transform: perspective(600px) rotateX(0); opacity: 1; }
+        }
+
+        @keyframes rotateInY {
+            from { transform: rotateY(-180deg); opacity: 0; }
+            to { transform: rotateY(0); opacity: 1; }
+        }
+
+        @keyframes scaleUp {
+            from { transform: scale(0.5); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideInLeft {
+            from { transform: translateX(-100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes bounceUp {
+            0% { transform: translateY(30px) scale(0.8); opacity: 0; }
+            50% { transform: translateY(-10px) scale(1.1); }
+            100% { transform: translateY(0) scale(1); opacity: 1; }
+        }
+
+        @keyframes zoomIn {
+            from { transform: scale(0.7); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .skills-grid, .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 2rem;
+        }
+
+        .certifications-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            padding: 1rem;
+        }
+
+        .certification-card {
+            padding: 1rem;
+            text-align: center;
+            color: #00B7EB;
+            transition: transform 0.3s ease, border 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid transparent;
+        }
+
+        .certification-card:nth-child(odd) {
+            clip-path: polygon(0 0, 100% 0, 100% 75%, 75% 100%, 0 100%);
+            background: rgba(0, 183, 235, 0.1);
+        }
+
+        .certification-card:nth-child(even) {
+            clip-path: polygon(0 0, 100% 0, 100% 100%, 25% 100%, 0 75%);
+            background: rgba(255, 69, 0, 0.1);
+        }
+
+        .certification-card:hover {
+            transform: scale(1.1);
+            border-image: linear-gradient(45deg, #FF0000, #00FF00, #0000FF) 1;
+            animation: neonPulse 1.5s infinite;
+        }
+
+        @keyframes neonPulse {
+            0% { border-image: linear-gradient(45deg, #FF0000, #00FF00, #0000FF) 1; }
+            50% { border-image: linear-gradient(45deg, #00FF00, #0000FF, #FF0000) 1; }
+            100% { border-image: linear-gradient(45deg, #0000FF, #FF0000, #00FF00) 1; }
+        }
+
+        .experience-grid, .education-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+
+        .contact-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+            position: relative;
+        }
+
+        .contact-form input, .contact-form button {
+            padding: 0.8rem;
+            font-size: 1rem;
+            border: 2px solid #00B7EB;
+            background: transparent;
+            color: #00B7EB;
+            border-radius: 8px;
+            transition: all 0.4s ease;
+        }
+
+        .contact-form button {
+            background: transparent;
+            cursor: pointer;
+        }
+
+        .contact-form button:hover {
+            color: #FFD700;
+            border-color: #FFD700;
+        }
+
+        .contact-message {
+            display: none;
+            text-align: center;
+            color: #00B7EB;
+            font-family: 'Caveat', cursive; /* Added Caveat font */
+            font-size: 1.2rem;
+            margin-top: 1rem;
+            padding: 1rem;
+            background: rgba(0, 183, 235, 0.1);
+            border-radius: 8px;
+        }
+
+        .social-icons {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            padding: 2rem 0;
+        }
+
+        .social-icons a {
+            font-size: 1.6rem;
+            transition: text-shadow 0.3s ease, transform 0.3s ease;
+        }
+
+        .social-icons a:hover {
+            text-shadow: 0 0 20px #FFFFFF, 0 0 30px #FFFFFF, 0 0 40px #FFFFFF; /* White glow */
+            transform: scale(1.2);
+        }
+
+        footer {
+            padding: 2rem 0;
+            text-align: center;
+        }
+
+        .resume-section {
+            text-align: center;
+            padding: 2.5rem 0;
+        }
+
+        .resume-btn {
+            display: inline-block;
+            padding: 1rem 2rem;
+            background: transparent;
+            color: #00B7EB;
+            text-decoration: none;
+            border: 2px solid #00B7EB;
+            border-radius: 10px;
+            transition: all 0.4s ease;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            text-shadow: 0 0 20px #00B7EB;
+            animation: pulse 1.5s infinite;
+        }
+
+        .resume-btn:hover {
+            color: #FFD700;
+            border-color: #FFD700;
+            text-shadow: 0 0 40px #FFFFFF, 0 0 50px #FFD700;
+            transform: scale(1.1);
+        }
+
+        .about-photo {
+            max-width: 300px;
+            border-radius: 15px;
+            box-shadow: 0 0 30px #00B7EB;
+            margin: 1.5rem auto;
+            animation: float 2.5s ease-in-out infinite;
+        }
+
+        .about-card p {
+            font-family: 'Chakra Petch', sans-serif; /* Added Chakra Petch font */
+        }
+
+        .confetti {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .confetti-piece {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: hsl(var(--hue), 80%, 50%);
+            animation: fall 5s linear forwards;
+        }
+
+        @keyframes fall {
+            0% { transform: translateY(-100vh) rotate(0deg); }
+            100% { transform: translateY(100vh) rotate(360deg); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(-100%); }
+            to { transform: translateX(0); }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+            100% { transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.8rem;
+            }
+
+            header p {
+                font-size: 1rem;
+            }
+
+            nav ul {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            nav ul li {
+                margin: 0.5rem 0;
+            }
+
+            .skills-grid, .tools-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .certifications-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .contact-form {
+                width: 100%;
+            }
+
+            .social-icons {
+                gap: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="background"></canvas>
+    <header>
+        <div class="container">
+            <div class="header-text">
+                <h1>Deva Kanaga Vimalathithan R</h1>
+                <p>Computer Science & Engineering Graduate | Tech Enthusiast</p>
+            </div>
+        </div>
+    </header>
+
+    <nav>
+        <ul>
+            <li><a href="#about">About</a></li>
+            <li><a href="#skills">Skills</a></li>
+            <li><a href="#experience">Experience</a></li>
+            <li><a href="#education">Education</a></li>
+            <li><a href="#certifications">Certifications</a></li>
+            <li><a href="#contact">Contact</a></li>
+        </ul>
+    </nav>
+
+    <section id="about" class="container">
+        <h2>About Me</h2>
+        <div class="card about-card">
+            <p>I'm a passionate and tech-savvy Computer Science and Engineering graduate from Sudharsan Engineering College. Driven by a strong curiosity for how technology solves real-world problems, I am eager to bring my energy, skills, and enthusiasm to a forward-thinking team.</p>
+            <img src="https://i.imgur.com/your-image-url.jpg" alt="Deva Kanaga Vimalathithan" class="about-photo">
+        </div>
+    </section>
+
+    <section id="skills" class="container">
+        <h2>Skills</h2>
+        <div class="skills-grid">
+            <div class="card skills-card">
+                <h3>Soft Skills</h3>
+                <ul>
+                    <li>Problem Solving</li>
+                    <li>Creative Thinking</li>
+                    <li>Data Analysis</li>
+                    <li>Customer Orientation</li>
+                    <li>Adaptability to Change</li>
+                </ul>
+            </div>
+            <div class="card skills-card">
+                <h3>Technical Skills</h3>
+                <ul>
+                    <li>Python</li>
+                    <li>Java</li>
+                    <li>HTML, CSS, JS</li>
+                </ul>
+            </div>
+            <div class="card skills-card">
+                <h3>Languages</h3>
+                <ul>
+                    <li>English</li>
+                    <li>Tamil</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <section id="tools" class="container">
+        <h2>Tools</h2>
+        <div class="tools-grid">
+            <div class="card tools-card">MS-Office</div>
+            <div class="card tools-card">Canva</div>
+            <div class="card tools-card">Photoshop</div>
+        </div>
+    </section>
+
+    <section id="experience" class="container">
+        <h2>Work Experience</h2>
+        <div class="experience-grid">
+            <div class="card experience-card">
+                <h3>Web Development Internship - Marcello Tech</h3>
+                <p><em>2024 (1 month)</em></p>
+                <p>Developed and maintained responsive web pages, applying HTML, CSS, and JavaScript to create interactive user interfaces.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="education" class="container">
+        <h2>Education</h2>
+        <div class="education-grid">
+            <div class="card education-card">
+                <h3>B.E in Computer Science and Engineering</h3>
+                <p><em>2021-2025</em></p>
+                <p>Sudharsan Engineering College, Pudukkottai</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="certifications" class="container">
+        <h2>Certifications</h2>
+        <div class="certifications-grid">
+            <div class="certification-card">Foundation of Cybersecurity - Coursera</div>
+            <div class="certification-card">Basics of Python - Infosys</div>
+            <div class="certification-card">Networking Basics - Cisco</div>
+            <div class="certification-card">OOPs in Python - Great Learning</div>
+            <div class="certification-card">Data Analysis in Python - IBM</div>
+            <div class="certification-card">Getting Started with AI - IBM SkillsBuild</div>
+            <div class="certification-card">HTML and CSS - LetsUpgrade</div>
+        </div>
+    </section>
+
+    <section id="resume" class="container resume-section">
+        <h2>Resume</h2>
+        <a href="Deva_Resume.pdf" download="Deva_Resume.pdf" class="resume-btn">Download Resume</a>
+    </section>
+
+    <section id="contact" class="container">
+        <h2>Contact</h2>
+        <div class="card contact-card">
+            <div class="contact-form">
+                <input type="text" id="name" placeholder="Your Name" required>
+                <input type="text" id="company" placeholder="Company Name" required>
+                <input type="email" id="email" placeholder="Your Email" required>
+                <textarea id="message" placeholder="Your Message" required></textarea>
+                <button onclick="sendEmail()">Send</button>
+                <div class="contact-message" id="contact-message"></div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="social-icons">
+            <a href="https://github.com/DevaTheBoss" target="_blank"><i class="fab fa-github"></i></a>
+            <a href="https://linkedin.com/in/deva-kanaga-vimalathithan-r-45350a283" target="_blank"><i class="fab fa-linkedin"></i></a>
+            <a href="https://www.instagram.com/_mr.unpredictable_?igsh=bGQ2ZzFhNG5iajhv" target="_blank"><i class="fab fa-instagram"></i></a>
+            <a href="https://wa.me/7092347285" target="_blank"><i class="fab fa-whatsapp"></i></a>
+        </div>
+        <p>© 2025 Deva Kanaga Vimalathithan R. All rights reserved.</p>
+    </footer>
+
+    <div class="confetti" id="confetti"></div>
+
+    <script src="https://smtpjs.com/v3/smtp.js"></script>
+    <script>
+        let scene, camera, renderer, stars;
+
+        function init() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            const canvas = document.getElementById('background');
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+
+            const geometry = new THREE.BufferGeometry();
+            const vertices = [];
+            const colors = [];
+            const color = new THREE.Color();
+
+            for (let i = 0; i < 2500; i++) {
+                vertices.push(
+                    Math.random() * 2500 - 1250,
+                    Math.random() * 2500 - 1250,
+                    Math.random() * 2500 - 1250
+                );
+                color.setHSL(Math.random(), 0.8, 0.6);
+                colors.push(color.r, color.g, color.b);
+            }
+
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+            geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+
+            const material = new THREE.PointsMaterial({ size: 4, vertexColors: true });
+            stars = new THREE.Points(geometry, material);
+            scene.add(stars);
+
+            camera.position.z = 600;
+
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            stars.rotation.x += 0.002;
+            stars.rotation.y += 0.002;
+            renderer.render(scene, camera);
+        }
+
+        init();
+        animate();
+
+        document.addEventListener('scroll', () => {
+            const cards = document.querySelectorAll('.card');
+            cards.forEach(card => {
+                const cardPosition = card.getBoundingClientRect().top;
+                const screenPosition = window.innerHeight / 1.2;
+
+                if (cardPosition < screenPosition && !card.classList.contains('visible')) {
+                    card.classList.add('visible');
+                }
+            });
+        });
+
+        function sendEmail() {
+            const name = document.getElementById('name').value;
+            const company = document.getElementById('company').value;
+            const email = document.getElementById('email').value;
+            const message = document.getElementById('message').value;
+            const contactMessage = document.getElementById('contact-message');
+
+            if (!name || !company || !email || !message) {
+                contactMessage.style.display = 'block';
+                contactMessage.textContent = 'All fields are required!';
+                setTimeout(() => contactMessage.style.display = 'none', 3000);
+                return;
+            }
+
+            contactMessage.style.display = 'block';
+            contactMessage.textContent = 'Thank you showing interest on me 💙';
+            setTimeout(() => contactMessage.style.display = 'none', 3000);
+
+            Email.send({
+                Host: "smtp.gmail.com",
+                Username: "devadevava1@gmail.com",
+                Password: "gqhy cbvp clnu bmky",
+                To: "devadevava1@gmail.com",
+                From: "devadevava1@gmail.com",
+                Subject: `Message from ${name} at ${company}`,
+                Body: `Name: ${name}\nCompany: ${company}\nEmail: ${email}\nMessage: ${message}`,
+            }).then(() => {
+                contactMessage.style.display = 'block';
+                contactMessage.textContent = 'Email sent successfully!';
+                setTimeout(() => contactMessage.style.display = 'none', 3000);
+                createConfetti();
+            }).catch(() => {
+                contactMessage.style.display = 'block';
+                contactMessage.textContent = 'Failed to send email.';
+                setTimeout(() => contactMessage.style.display = 'none', 3000);
+            });
+        }
+
+        function createConfetti() {
+            const confetti = document.getElementById('confetti');
+            confetti.innerHTML = '';
+            for (let i = 0; i < 100; i++) {
+                const piece = document.createElement('div');
+                piece.className = 'confetti-piece';
+                piece.style.left = Math.random() * 100 + 'vw';
+                piece.style.background = `hsl(${Math.random() * 360}, 80%, 50%)`;
+                piece.style.animationDelay = (Math.random() * 2) + 's';
+                piece.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                piece.style('--hue', Math.random() * 360);
+                confetti.appendChild(piece);
+            }
+            setTimeout(() => confetti.innerHTML = '', 5000); // Clear after 5 seconds
+        }
+    </script>
+</body>
+</html>
